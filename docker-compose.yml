@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  backend:
+  app:
     build: .
     ports:
       - "8000:8000"
@@ -10,21 +10,13 @@ services:
     volumes:
       - db-data:/app/backend/db
       - monitored-files:/app/monitored_files
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
-    ports:
-      - "5173:80"
-    depends_on:
-      - backend
+    restart: unless-stopped
 
   simulator:
     build: .
     command: python -m simulator.simulate
     depends_on:
-      - backend
+      - app
     profiles:
       - simulate
 

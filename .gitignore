@@ -3,7 +3,9 @@ __pycache__/
 *.pyo
 .pytest_cache/
 *.egg-info/
+# Ignore dist except frontend/dist (production build)
 dist/
+!frontend/dist/
 build/
 .env
 *.db

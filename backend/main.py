@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from backend.api.routes import router, ws_manager
 from backend.collectors import (
@@ -21,6 +23,9 @@ from backend.engine import AlertManager, EventBus, RiskScorer, RulesEngine
 from backend.models import Alert
 
 logger = logging.getLogger(__name__)
+
+# Resolve frontend build directory (works for both dev and Docker)
+_FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 
 async def _ws_broadcast(alert: Alert, risk_score: float) -> None:
@@ -94,3 +99,20 @@ app.add_middleware(
 )
 
 app.include_router(router)
+
+# Serve the React frontend from /frontend/dist when it exists.
+# In production (Docker or PyInstaller), the built SPA is served here.
+# API routes are registered first, so /api/* and /ws/* still work.
+if _FRONTEND_DIST.is_dir():
+    from fastapi.responses import FileResponse
+
+    # Serve static assets (JS, CSS, etc.)
+    app.mount("/assets", StaticFiles(directory=str(_FRONTEND_DIST / "assets")), name="static-assets")
+
+    # SPA catch-all: any non-API route returns index.html
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file_path = _FRONTEND_DIST / full_path
+        if full_path and file_path.is_file():
+            return FileResponse(str(file_path))
+        return FileResponse(str(_FRONTEND_DIST / "index.html"))
