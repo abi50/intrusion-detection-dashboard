@@ -7,7 +7,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api.routes import router, ws_manager
-from backend.collectors import CpuCollector, PortCollector
+from backend.collectors import (
+    ConnectionCollector,
+    CpuCollector,
+    FileCollector,
+    LogCollector,
+    PortCollector,
+    ProcessCollector,
+)
 from backend.config import settings
 from backend.db import database as db
 from backend.engine import AlertManager, EventBus, RiskScorer, RulesEngine
@@ -50,6 +57,10 @@ async def lifespan(app: FastAPI):
     collectors = [
         CpuCollector(event_bus, interval=settings.collect_interval),
         PortCollector(event_bus, interval=settings.collect_interval),
+        ProcessCollector(event_bus, interval=settings.collect_interval),
+        ConnectionCollector(event_bus, interval=settings.collect_interval),
+        FileCollector(event_bus, monitored_dir=settings.monitored_directory, interval=settings.collect_interval),
+        LogCollector(event_bus, interval=settings.collect_interval),
     ]
     for c in collectors:
         await c.start()
