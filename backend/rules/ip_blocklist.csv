@@ -1,0 +1,5 @@
+ip,label
+198.51.100.0/24,TEST-NET-2 (documentation range used as demo blocklist)
+203.0.113.0/24,TEST-NET-3 (documentation range used as demo blocklist)
+192.0.2.0/24,TEST-NET-1 (documentation range used as demo blocklist)
+10.66.66.0/24,Simulated malicious C2 range

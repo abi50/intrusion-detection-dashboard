@@ -1,0 +1,62 @@
+rules:
+  - id: PORT_SUSPICIOUS
+    description: "Unexpected listening port detected"
+    source: port_collector
+    condition:
+      field: port
+      operator: not_in
+      value: [22, 80, 443, 3000, 5173, 8000, 8080]
+    severity: HIGH
+    weight: 8
+
+  - id: PROCESS_SUSPICIOUS
+    description: "Known-suspicious process name detected"
+    source: process_collector
+    condition:
+      field: name
+      operator: in
+      value: [nc, ncat, netcat, mimikatz, reverse_shell, cryptominer]
+    severity: CRITICAL
+    weight: 9
+
+  - id: CPU_SPIKE
+    description: "Sustained high CPU usage"
+    source: cpu_collector
+    condition:
+      field: percent
+      operator: gt
+      value: 90
+      sustained_seconds: 30
+    severity: MEDIUM
+    weight: 4
+
+  - id: BRUTE_FORCE
+    description: "Multiple failed login attempts"
+    source: log_collector
+    condition:
+      field: failed_logins
+      operator: gt
+      value: 5
+      window_seconds: 60
+    severity: HIGH
+    weight: 7
+
+  - id: FILE_TAMPERED
+    description: "Monitored file hash changed"
+    source: file_collector
+    condition:
+      field: hash_match
+      operator: eq
+      value: false
+    severity: CRITICAL
+    weight: 9
+
+  - id: CONNECTION_BLOCKLIST
+    description: "Outbound connection to blocklisted IP"
+    source: connection_collector
+    condition:
+      field: remote_ip
+      operator: in_blocklist
+      value: "rules/ip_blocklist.csv"
+    severity: HIGH
+    weight: 8
